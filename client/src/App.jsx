@@ -4,6 +4,8 @@ import axios from 'axios'
 function App() {
   const [tarefas, setTarefas] = useState([])
   const [novoTitulo, setNovoTitulo] = useState("")
+  const [editandoTitulo, setEditandoTitulo] = useState("")
+  const [editandoId, setEditandoId] = useState("")
 
   const buscarTarefas = () => {
     axios.get('http://localhost:5000/tarefas')
@@ -33,6 +35,14 @@ function App() {
     };
   }
 
+  const salvarEdicao = async (id) => {
+  await axios.put(`http://localhost:5000/tarefas/${id}`, { 
+    titulo: editandoTitulo 
+  });
+  setEditandoId(null);
+  buscarTarefas();    
+};
+
   return (
     <div style={{ padding: '20px', fontFamily: 'sans-serif' }}>
       <h1>Gerenciador de Tarefas</h1>
@@ -47,15 +57,27 @@ function App() {
       </form>
 
       <ul>
-        {tarefas.map(t => ( 
-          <li key={t.id} style={{ marginBottom: '10px' }}>
-            {t.titulo}
-            <button 
-              onClick={() => deletarTarefa(t.id)} 
-              style={{ marginLeft: '10px', color: 'red' }}
-            >
-              Excluir
-            </button>
+        {tarefas.map(tarefa => ( 
+            <li key={tarefa.id}>
+            {editandoId === tarefa.id ? (
+              <>
+                <input 
+                  value={editandoTitulo} 
+                  onChange={(e) => setEditandoTitulo(e.target.value)} 
+                />
+                <button onClick={() => salvarEdicao(tarefa.id)}>Salvar</button>
+                <button onClick={() => setEditandoId(null)}>Cancelar</button>
+              </>
+            ) : (
+              <>
+                {tarefa.titulo}
+                <button onClick={() => {
+                  setEditandoId(tarefa.id);
+                  setEditandoTitulo(tarefa.titulo);
+                }}>Editar</button>
+                <button onClick={() => deletarTarefa(tarefa.id)}>Excluir</button>
+              </>
+            )}
           </li>))}
       </ul>
     </div>
