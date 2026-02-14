@@ -3,25 +3,41 @@ import axios from 'axios'
 
 function App() {
   const [tarefas, setTarefas] = useState([])
+  const [novoTitulo, setNovoTitulo] = useState("")
 
-  useEffect(() => {
-    // Busca os dados na rota /tarefas que criamos no Node
+  const buscarTarefas = () => {
     axios.get('http://localhost:5000/tarefas')
-      .then(response => {
-        setTarefas(response.data) // O axios já transforma o JSON em objeto JS
+      .then(res => setTarefas(res.data))
+  }
+
+  useEffect(() => { buscarTarefas() }, [])
+
+  const adicionarTarefa = (e) => {
+    e.preventDefault();
+    if (!novoTitulo) return;
+
+    axios.post('http://localhost:5000/tarefas/nova', { titulo: novoTitulo })
+      .then(() => {
+        setNovoTitulo(""); 
+        buscarTarefas(); 
       })
-      .catch(error => console.error("Erro ao buscar tarefas:", error))
-  }, [])
+  }
 
   return (
     <div style={{ padding: '20px', fontFamily: 'sans-serif' }}>
-      <h1>Minhas Tarefas (Vindo do Back-end)</h1>
+      <h1>Gerenciador de Tarefas</h1>
+
+      <form onSubmit={adicionarTarefa}>
+        <input 
+          value={novoTitulo} 
+          onChange={(e) => setNovoTitulo(e.target.value)}
+          placeholder="Digite uma nova tarefa..."
+        />
+        <button type="submit">Adicionar</button>
+      </form>
+
       <ul>
-        {tarefas.map(tarefa => (
-          <li key={tarefa.id} style={{ marginBottom: '10px' }}>
-            {tarefa.titulo}
-          </li>
-        ))}
+        {tarefas.map(t => <li key={t.id}>{t.titulo}</li>)}
       </ul>
     </div>
   )
