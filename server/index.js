@@ -28,7 +28,21 @@ app.post('/tarefas/nova', (req,res) => {
 
    tarefas.push(novaTarefa);
    res.status(201).json(novaTarefa);
-})
+});
+
+app.delete('/tarefas/:id', (req,res) => {
+  const { id } = req.params;
+
+  const index = tarefas.findIndex(t => t.id === Number(id));
+
+  if (index >= -1) {
+    tarefas.splice(index, 1);
+    return res.status(204).send();
+  }
+
+  res.status(404).json({ message: "Tarefa não encontrada" })
+
+});
 
 app.listen(5000, () => {
   console.log('Servidor rodando em http://localhost:5000');

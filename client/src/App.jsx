@@ -23,6 +23,16 @@ function App() {
       })
   }
 
+  const deletarTarefa = async (id) => {
+    try {
+      await axios.delete(`http://localhost:5000/tarefas/${id}`);
+      buscarTarefas();
+    } catch (error) {
+      console.error("Erro ao deletar:", error);
+      
+    };
+  }
+
   return (
     <div style={{ padding: '20px', fontFamily: 'sans-serif' }}>
       <h1>Gerenciador de Tarefas</h1>
@@ -37,7 +47,16 @@ function App() {
       </form>
 
       <ul>
-        {tarefas.map(t => <li key={t.id}>{t.titulo}</li>)}
+        {tarefas.map(t => ( 
+          <li key={t.id} style={{ marginBottom: '10px' }}>
+            {t.titulo}
+            <button 
+              onClick={() => deletarTarefa(t.id)} 
+              style={{ marginLeft: '10px', color: 'red' }}
+            >
+              Excluir
+            </button>
+          </li>))}
       </ul>
     </div>
   )
