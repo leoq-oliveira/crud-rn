@@ -18,6 +18,18 @@ app.get('/tarefas', (req, res) => {
   res.json(tarefas); 
 });
 
+app.post('/tarefas/nova', (req,res) => {
+  const {titulo} = req.body;
+
+  const novaTarefa = { 
+    id: Math.floor(Math.random() * 10000),
+    titulo: titulo
+   };
+
+   tarefas.push(novaTarefa);
+   res.status(201).json(novaTarefa);
+})
+
 app.listen(5000, () => {
   console.log('Servidor rodando em http://localhost:5000');
 });
