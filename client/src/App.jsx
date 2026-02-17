@@ -7,6 +7,8 @@ function App() {
   const [novoTitulo, setNovoTitulo] = useState("")
   const [editandoTitulo, setEditandoTitulo] = useState("")
   const [editandoId, setEditandoId] = useState("")
+  const [modalAberto, setModalAberto] = useState(false);
+  const [tarefaParaExcluir, setTarefaParaExcluir] = useState(null);
 
   const buscarTarefas = () => {
     axios.get('http://localhost:5000/tarefas')
@@ -52,6 +54,24 @@ const deletarTarefa = async (id) => {
     } catch (error) {
       toast.error('Erro ao remover.');
     }
+  }
+};
+
+const confirmarExclusao = (id) => {
+  setTarefaParaExcluir(id);
+  setModalAberto(true);
+};
+
+const executarExclusao = async () => {
+  try {
+    await axios.delete(`http://localhost:5000/tarefas/${tarefaParaExcluir}`);
+    buscarTarefas();
+    toast.success('Tarefa removida!');
+  } catch (error) {
+    toast.error('Erro ao remover.');
+  } finally {
+    setModalAberto(false);
+    setTarefaParaExcluir(null);
   }
 };
 
@@ -114,9 +134,8 @@ return (
                     ✏️
                   </button>
                   <button 
-                    onClick={() => deletarTarefa(t.id)}
-                    className="p-2 hover:bg-red-50 rounded-lg text-red-400 transition-colors"
-                    title="Excluir"
+                    onClick={() => confirmarExclusao(t.id)} // Alterado aqui
+                    className="p-2 hover:bg-red-50 rounded-xl text-red-400 transition-colors"
                   >
                     🗑️
                   </button>
@@ -134,6 +153,34 @@ return (
       </div>
 
     </div>
+      {modalAberto && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-[2.5rem] p-8 max-w-sm w-full shadow-2xl scale-in-center border border-gray-100">
+            <div className="text-center">
+              <div className="text-4xl mb-4 text-red-500">⚠️</div>
+              <h3 className="text-2xl font-black text-gray-800 mb-2">Tem certeza?</h3>
+              <p className="text-gray-500 mb-8 font-medium">
+                Essa ação não poderá ser desfeita. Deseja mesmo excluir esta meta?
+              </p>
+              
+              <div className="flex gap-3">
+                <button 
+                  onClick={() => setModalAberto(false)}
+                  className="flex-1 py-3 px-6 bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold rounded-2xl transition-all"
+                >
+                  Cancelar
+                </button>
+                <button 
+                  onClick={executarExclusao}
+                  className="flex-1 py-3 px-6 bg-red-500 hover:bg-red-600 text-white font-bold rounded-2xl shadow-lg shadow-red-200 transition-all"
+                >
+                  Excluir
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
   </div>
 );
 }
