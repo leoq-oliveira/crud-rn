@@ -10,70 +10,83 @@ function App() {
   const [modalAberto, setModalAberto] = useState(false);
   const [tarefaParaExcluir, setTarefaParaExcluir] = useState(null);
 
-  const buscarTarefas = () => {
-    axios.get('http://localhost:5000/tarefas')
-      .then(res => setTarefas(res.data))
-  }
+    const buscarTarefas = () => {
+      axios.get('http://localhost:5000/tasks')
+        .then(res => setTarefas(res.data))
+    }
 
-  useEffect(() => { buscarTarefas() }, [])
+    useEffect(() => { buscarTarefas() }, [])
 
-  const salvarEdicao = async (id) => {
-     try {
-    await axios.put(`http://localhost:5000/tarefas/${id}`, { 
-    titulo: editandoTitulo 
-    });
-    toast.success('Tarefa Editada!');
-  } catch (error) {
-    toast.error('Erro ao Editar tarefa.');
-  }
-  setEditandoId(null);
-  buscarTarefas();    
-};
+    const salvarEdicao = async (id) => {
+      try {
+      await axios.put(`http://localhost:5000/tasks/${id}`, { 
+      titulo: editandoTitulo 
+      });
+      toast.success('Tarefa Editada!');
+    } catch (error) {
+      toast.error('Erro ao Editar tarefa.');
+    }
+    setEditandoId(null);
+    buscarTarefas();    
+  };
 
-const adicionarTarefa = async (e) => {
-  e.preventDefault();
-  if (!novoTitulo.trim()) return;
-  try {
-    await axios.post('http://localhost:5000/tarefas/nova', { titulo: novoTitulo });
-    setNovoTitulo("");
-    buscarTarefas();
-    toast.success('Tarefa adicionada!');
-  } catch (error) {
-    toast.error('Erro ao adicionar tarefa.');
-  }
-};
-
-const deletarTarefa = async (id) => {
-  const confirmou = window.confirm("Tem certeza que deseja excluir esta meta?");
-
-  if(confirmou) {
+  const adicionarTarefa = async (e) => {
+    e.preventDefault();
+    if (!novoTitulo.trim()) return;
     try {
-      await axios.delete(`http://localhost:5000/tarefas/${id}`);
+      await axios.post('http://localhost:5000/tasks', { titulo: novoTitulo });
+      setNovoTitulo("");
       buscarTarefas();
-      toast.success('Tarefa removida!', { icon: '🗑️' });
+      toast.success('Tarefa adicionada!');
+    } catch (error) {
+      toast.error('Erro ao adicionar tarefa.');
+    }
+  };
+
+  const deletarTarefa = async (id) => {
+    const confirmou = window.confirm("Tem certeza que deseja excluir esta meta?");
+
+    if(confirmou) {
+      try {
+        await axios.delete(`http://localhost:5000/tasks/${id}`);
+        buscarTarefas();
+        toast.success('Tarefa removida!', { icon: '🗑️' });
+      } catch (error) {
+        toast.error('Erro ao remover.');
+      }
+    }
+  };
+
+  const confirmarExclusao = (id) => {
+    setTarefaParaExcluir(id);
+    setModalAberto(true);
+  };
+
+  const executarExclusao = async () => {
+    try {
+      await axios.delete(`http://localhost:5000/tasks/${tarefaParaExcluir}`);
+      buscarTarefas();
+      toast.success('Tarefa removida!');
     } catch (error) {
       toast.error('Erro ao remover.');
+    } finally {
+      setModalAberto(false);
+      setTarefaParaExcluir(null);
     }
-  }
-};
+  };
 
-const confirmarExclusao = (id) => {
-  setTarefaParaExcluir(id);
-  setModalAberto(true);
-};
+  const alternarStatus = async (id, estadoAtual) => {
+    try {
+      await axios.put(`http://localhost:5000/tasks/${id}`, {
+        feita: !estadoAtual
+      });
 
-const executarExclusao = async () => {
-  try {
-    await axios.delete(`http://localhost:5000/tarefas/${tarefaParaExcluir}`);
-    buscarTarefas();
-    toast.success('Tarefa removida!');
-  } catch (error) {
-    toast.error('Erro ao remover.');
-  } finally {
-    setModalAberto(false);
-    setTarefaParaExcluir(null);
-  }
-};
+      buscarTarefas();
+    } catch (error) {
+      toast.error('Erro ao atualizar status.');
+    }
+  };
+
 
 return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center p-6">
@@ -99,9 +112,35 @@ return (
 
       <div className="space-y-4">
         {tarefas.length > 0 ? (tarefas.map((t) => (
-          <div key={t.id} className="group flex items-center justify-between p-5 bg-white border border-gray-100 rounded-2xl hover:border-blue-100 hover:shadow-md transition-all duration-300">
+          <div key={t._id} className="group flex items-center justify-between p-5 bg-white border border-gray-100 rounded-2xl hover:border-blue-100 hover:shadow-md transition-all duration-300">
+           
+          <div className="inline-flex items-center relative">
+            <input
+              type="checkbox"
+              className="peer h-5 w-5 cursor-pointer transition-all appearance-none rounded shadow hover:shadow-md border border-slate-300 checked:bg-slate-800 checked:border-slate-800"
+              checked={t.feita}
+              onChange={() => alternarStatus(t._id, t.feita)}
+            />
+
+            <span className="absolute text-white opacity-0 peer-checked:opacity-100 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-3.5 w-3.5"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                stroke="currentColor"
+                strokeWidth="1"
+              >
+                <path
+                  fillRule="evenodd"
+                  clipRule="evenodd"
+                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                />
+              </svg>
+            </span>
+          </div>
             
-            {editandoId === t.id ? (
+            {editandoId === t._id ? (
               // MODO EDIÇÃO
               <div className="flex gap-3 w-full">
                 <input 
@@ -110,7 +149,7 @@ return (
                   onChange={(e) => setEditandoTitulo(e.target.value)}
                   autoFocus
                 />
-                <button onClick={() => salvarEdicao(t.id)} className="bg-green-500 text-white px-4 py-2 rounded-xl shadow-md hover:bg-green-600 transition-colors">
+                <button onClick={() => salvarEdicao(t._id)} className="bg-green-500 text-white px-4 py-2 rounded-xl shadow-md hover:bg-green-600 transition-colors">
                   ✔
                 </button>
                 <button onClick={() => setEditandoId(null)} className="bg-gray-200 text-gray-600 px-4 py-2 rounded-xl hover:bg-gray-300 transition-colors">
@@ -127,14 +166,14 @@ return (
                 
                 <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300">
                   <button 
-                    onClick={() => { setEditandoId(t.id); setEditandoTitulo(t.titulo); }}
+                    onClick={() => { setEditandoId(t._id); setEditandoTitulo(t.titulo); }}
                     className="p-2 hover:bg-blue-50 rounded-lg text-blue-500 transition-colors"
                     title="Editar"
                   >
                     ✏️
                   </button>
                   <button 
-                    onClick={() => confirmarExclusao(t.id)} // Alterado aqui
+                    onClick={() => confirmarExclusao(t._id)} // Alterado aqui
                     className="p-2 hover:bg-red-50 rounded-xl text-red-400 transition-colors"
                   >
                     🗑️
